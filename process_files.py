@@ -3,7 +3,6 @@ import pathlib
 from PIL import Image
 import json
 import tensorflow as tf
-import time
 
 images_path = pathlib.Path("C:/Users/tymur.arduch/Desktop/data/gun_holding/images")
 images_amount = len(os.listdir(images_path))
@@ -40,27 +39,29 @@ def create_dataset(images_path, coordinates_path):
         # Sort coordinates
         for number in range(images_amount):
             for idx in range(images_amount):
-                if int(json_coordinates["dataset"]["images"]["image"][i]["_file"].replace(".jpg", "")) == number:
+                if int(json_coordinates["dataset"]["images"]["image"][idx]["_file"].replace(".jpg", "")) == number:
                     sorted_json.append(json_coordinates["dataset"]["images"]["image"][idx])
                     break
+        # print(*sorted_json, sep="\n")
         # Add coordinates to a list
         for idx in range(images_amount):
             bbox_coordinates.append(list(map(int, list(sorted_json[idx]["box"].values())[1:])))
 
     return tf.stack(tensors_list), tf.convert_to_tensor(bbox_coordinates, dtype=tf.float32)
 
-
-# assign_files(path=images_path, amount=images_amount, datatype=".jpg")
-# resize_images(images_path, 256, 256)
-
 # X, y split
-# X, y = create_dataset(images_path, coordinates_path)
+X, y = create_dataset(images_path, coordinates_path)
 # Train, Val, Split
-# X_train, y_train = X[:(len(X)*0.75)], y[:(len(X)*0.75)]
-# X_val, y_val = X[(len(X)*0.75):(len(X)*0.90)], y[(len(X)*0.75):(len(X)*0.90)]
-# X_test, y_test = X[(len(X)*0.90):], y[(len(X)*0.90):]
-# print(f"Train: {len(X_train)} \n"
-#       f"Val: {len(X_val)} \n"
-#       f"Test: {len(X_test)}")
+X_train, y_train = X[:int(len(X) * 0.75)], y[:int(len(X) * 0.75)]
+X_val, y_val = X[int(len(X) * 0.75):int(len(X) * 0.90)], y[int(len(X) * 0.75):int(len(X) * 0.90)]
+X_test, y_test = X[int(len(X) * 0.90):], y[int(len(X) * 0.90):]
+
 if __name__ == "__main__":
-    pass
+    # assign_files(path=images_path, amount=images_amount, datatype=".jpg")
+    # resize_images(images_path, 256, 256)
+
+    print(f"Total: {images_amount} \n"
+          f"Train: {len(X_train)} \n"
+          f"Val: {len(X_val)} \n"
+          f"Test: {len(X_test)}")
+    print(X_test, y_test)
