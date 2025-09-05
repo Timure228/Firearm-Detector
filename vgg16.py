@@ -2,6 +2,7 @@ import keras
 from process_files import X_train, y_train, X_val, y_val
 import matplotlib.pyplot as plt
 import numpy as np
+from metrics import MeanIou
 
 # Import VGG16 Model
 vgg16 = keras.applications.VGG16(weights="imagenet", include_top=False,
@@ -12,22 +13,41 @@ vgg16.trainable = False
 # Flatten the VGG16 max-pooling output
 vgg_output = vgg16.output
 flatten_layer = keras.layers.Flatten()(vgg_output)
+
 # Fully connected layers for bounding box coordinates
 bbox = keras.layers.Dense(128, activation="relu")(flatten_layer)
 bbox = keras.layers.Dense(64, activation="relu")(bbox)
 dropout = keras.layers.Dropout(0.5)(bbox)
 bbox = keras.layers.Dense(32, activation="relu")(dropout)
 output_ = keras.layers.Dense(4, activation="linear")(bbox)
+
 # Define the model
 custom_vgg16 = keras.models.Model(vgg16.input, output_)
+
+# 1 Train Loop
 # Compile the model
 loss_fn = keras.losses.MeanSquaredError()
 optimizer = keras.optimizers.Adam(0.01)
-custom_vgg16.compile(loss=loss_fn, optimizer=optimizer)
-# Train
+custom_vgg16.compile(loss=loss_fn, optimizer=optimizer, metrics=[MeanIou()])
+
+# Fit
+history = custom_vgg16.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=6, batch_size=8)
+
+# 2 Train Loop
+# Unfreeze all layers
+for layer in vgg16.layers:
+    layer.trainable = True
+
+# Compile the model
+loss_fn = keras.losses.MeanSquaredError()
+optimizer = keras.optimizers.Adam(0.001)
+custom_vgg16.compile(loss=loss_fn, optimizer=optimizer, metrics=[MeanIou()])
+
+# Fit
 history = custom_vgg16.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=8)
+
+# Plot the train/val losses
 custom_vgg16.save("models/custom_vgg16_bbox_reg.keras")
-# Plot it
 epochs_n = 10
 plt.style.use("ggplot")
 plt.figure()
