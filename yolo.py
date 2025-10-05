@@ -1,7 +1,8 @@
 import keras
 import tensorflow as tf
 from functools import partial
-
+from dataset_keras import train_ds, val_ds
+import math
 
 @keras.saving.register_keras_serializable()
 class MyYolo(keras.models.Model):
@@ -112,15 +113,13 @@ class MyYolo(keras.models.Model):
 
     def call(self, x):
         x = self.layers_(x)
-        return self.output_layer(x)
+        return x
 
 yolo = MyYolo((256, 256, 3))
-print(yolo.get_config())
-yolo.summary(expand_nested=False)
+# yolo.summary(expand_nested=False)
 
 loss_fn = keras.losses.MeanSquaredError()
 optimizer = keras.optimizers.Adam(0.001)
-yolo.compile(loss=loss_fn, optimizer=optimizer, metrics=[MeanIou()])
+yolo.compile(loss=loss_fn, optimizer=optimizer)
 
-history = custom_vgg16.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=5, batch_size=8)
-
+history = yolo.fit(train_ds, validation_data=val_ds, epochs=5, batch_size=8)
