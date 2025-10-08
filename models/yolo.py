@@ -1,8 +1,8 @@
 import keras
-import tensorflow as tf
 from functools import partial
-from dataset_keras import train_ds, val_ds
-import math
+from dataset_tf import train_ds, val_ds
+from metrics import MeanIou
+
 
 @keras.saving.register_keras_serializable()
 class MyYolo(keras.models.Model):
@@ -103,6 +103,7 @@ class MyYolo(keras.models.Model):
             # Dense
             keras.layers.GlobalAveragePooling2D(),
             keras.layers.Dense(128, activation="relu"),
+            keras.layers.Dropout(0.5),
             keras.layers.Dense(4, activation="linear")
         ])
 
@@ -112,14 +113,17 @@ class MyYolo(keras.models.Model):
         return config
 
     def call(self, x):
-        x = self.layers_(x)
-        return x
+        return self.layers_(x)
 
-yolo = MyYolo((256, 256, 3))
-# yolo.summary(expand_nested=False)
 
-loss_fn = keras.losses.MeanSquaredError()
-optimizer = keras.optimizers.Adam(0.001)
-yolo.compile(loss=loss_fn, optimizer=optimizer)
+if __name__ == "__main__":
+    yolo = MyYolo((256, 256, 3))
+    # yolo.summary(expand_nested=False)
 
-history = yolo.fit(train_ds, validation_data=val_ds, epochs=5, batch_size=8)
+    loss_fn = keras.losses.MeanSquaredError()
+    optimizer = keras.optimizers.Adam(0.001)
+    yolo.compile(loss=loss_fn, optimizer=optimizer, metrics=[MeanIou()])
+
+    print(yolo.get_config())
+    history = yolo.fit(train_ds, validation_data=val_ds, epochs=10, batch_size=8)
+    yolo.save("C:/Users/tymur.arduch/PycharmProjects/firearm_detector/saved_models/yolo_bbox_reg.keras")

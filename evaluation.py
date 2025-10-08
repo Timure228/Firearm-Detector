@@ -1,8 +1,15 @@
 import keras
-from process_files import X_test, X_val, y_test
-import numpy as np
+from pathlib import Path
+from dataset_tf import build_dataset
+from models.yolo import MyYolo
 
-model = keras.models.load_model("models/custom1.keras")
-print(X_test.shape, X_val.shape)
-print(model.predict(np.expand_dims(X_test[0], 0)))
-print(y_test[0])
+test_images_path = Path("C:/Users/tymur.arduch/Desktop/data/gun_holding/datasets/test/images")
+
+test_labels_path = Path("C:/Users/tymur.arduch/Desktop/data/gun_holding/datasets/test/labels")
+
+model = keras.models.load_model("saved_models/yolo_bbox_reg.keras")
+
+test_ds = build_dataset(test_images_path, test_labels_path, batch_size=8)
+
+print(model.predict(test_ds))
+

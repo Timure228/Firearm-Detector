@@ -40,4 +40,4 @@ optimizer = keras.optimizers.SGD(learning_rate=0.001, momentum=0.7)
 custom_model.compile(loss=loss, optimizer=optimizer)
 history = custom_model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=25)
 # Save the model
-custom_model.save("models/custom1.keras")
+custom_model.save("saved_models/custom1.keras")

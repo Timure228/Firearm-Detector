@@ -15,10 +15,10 @@ vgg_output = vgg16.output
 flatten_layer = keras.layers.Flatten()(vgg_output)
 
 # Fully connected layers for bounding box coordinates
-bbox = keras.layers.Dense(128, activation="relu")(flatten_layer)
-bbox = keras.layers.Dense(64, activation="relu")(bbox)
+bbox = keras.layers.Dense(128, activation="relu", kernel_initializer="he_normal")(flatten_layer)
+bbox = keras.layers.Dense(64, activation="relu", kernel_initializer="he_normal")(bbox)
 dropout = keras.layers.Dropout(0.5)(bbox)
-bbox = keras.layers.Dense(32, activation="relu")(dropout)
+bbox = keras.layers.Dense(32, activation="relu", kernel_initializer="he_normal")(dropout)
 output_ = keras.layers.Dense(4, activation="linear")(bbox)
 
 # Define the model
@@ -47,7 +47,7 @@ custom_vgg16.compile(loss=loss_fn, optimizer=optimizer, metrics=[MeanIou()])
 history = custom_vgg16.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=8)
 
 # Plot the train/val losses
-custom_vgg16.save("models/custom_vgg16_bbox_reg.keras")
+custom_vgg16.save("saved_models/custom_vgg16_bbox_reg.keras")
 epochs_n = 10
 plt.style.use("ggplot")
 plt.figure()

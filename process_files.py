@@ -9,7 +9,7 @@ images_amount = len(os.listdir(images_path))
 coordinates_path = pathlib.Path("C:/Users/tymur.arduch/Desktop/data/gun_holding/labels/json.json")
 
 
-def assign_files(path, amount, datatype) -> None:
+def assign_files(path, datatype) -> None:
     files = sorted(os.listdir(path))
     for file_idx, filename in enumerate(files):
         file_path = pathlib.Path(path, filename)
@@ -24,7 +24,17 @@ def resize_images(path, width, height) -> None:
         resized_image.save(pathlib.Path(path, image))
 
 
-def create_dataset(images_path, coordinates_path):
+def create_dataset(images_path,
+                   coordinates_path,
+                   datatype=".jpg",
+                   width=256,
+                   height=256,
+                   preprocessing=False):
+    if preprocessing:
+        # Assign files
+        assign_files(images_path, datatype)
+        # Resize the images
+        resize_images(images_path, width, height)
     # Load images
     tensors_list = []
     for image_name in sorted(os.listdir(images_path), key=lambda x: int(x.split('.')[0])):
@@ -49,19 +59,17 @@ def create_dataset(images_path, coordinates_path):
 
     return tf.stack(tensors_list), tf.convert_to_tensor(bbox_coordinates, dtype=tf.float32)
 
-# X, y split
-X, y = create_dataset(images_path, coordinates_path)
-# Train, Val, Split
-X_train, y_train = X[:int(len(X) * 0.75)], y[:int(len(X) * 0.75)]
-X_val, y_val = X[int(len(X) * 0.75):int(len(X) * 0.90)], y[int(len(X) * 0.75):int(len(X) * 0.90)]
-X_test, y_test = X[int(len(X) * 0.90):], y[int(len(X) * 0.90):]
 
 if __name__ == "__main__":
-    # assign_files(path=images_path, amount=images_amount, datatype=".jpg")
-    # resize_images(images_path, 256, 256)
-
+    # X, y split
+    X, y = create_dataset(images_path, coordinates_path)
+    # Train, Val, Split
+    X_train, y_train = abs(X[:int(len(X) * 0.75)]), abs(y[:int(len(X) * 0.75)]) / 256
+    X_val, y_val = abs(X[int(len(X) * 0.75):int(len(X) * 0.90)]), abs(y[int(len(X) * 0.75):int(len(X) * 0.90)]) / 256
+    X_test, y_test = abs(X[int(len(X) * 0.90):]), abs(y[int(len(X) * 0.90):])
+    # Print out the dataset split info
     print(f"Total: {images_amount} \n"
           f"Train: {len(X_train)} \n"
           f"Val: {len(X_val)} \n"
           f"Test: {len(X_test)}")
-    print(X_test, y_test)
+    print(X_test, y_train)
